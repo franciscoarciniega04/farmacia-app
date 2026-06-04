@@ -5,6 +5,7 @@ import os
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
+import bcrypt
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,9 +22,16 @@ IVA = Decimal("0.16")
 
 app = FastAPI(title="Farmacia API", version="1.0.0")
 
+cors_origins = os.getenv("CORS_ORIGINS", "*")
+
+if cors_origins == "*":
+    allowed_origins = ["*"]
+else:
+    allowed_origins = [origin.strip() for origin in cors_origins.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -43,12 +51,26 @@ def to_float(value):
 
 
 def hash_password(password: str) -> str:
-    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+    return bcrypt.hashpw(
+        password.encode("utf-8"),
+        bcrypt.gensalt()
+    ).decode("utf-8")
 
 
 def verify_password(raw_password: str, stored_password: str) -> bool:
-    # Permite login si la contraseña está guardada en hash o en texto plano.
-    return stored_password in {raw_password, hash_password(raw_password)}
+    if not stored_password:
+        return False
+
+    # Contraseñas nuevas con bcrypt
+    if stored_password.startswith("$2a$") or stored_password.startswith("$2b$") or stored_password.startswith("$2y$"):
+        return bcrypt.checkpw(
+            raw_password.encode("utf-8"),
+            stored_password.encode("utf-8")
+        )
+
+    # Compatibilidad temporal con contraseñas antiguas en SHA-256 o texto plano
+    old_sha256 = hashlib.sha256(raw_password.encode("utf-8")).hexdigest()
+    return stored_password in {raw_password, old_sha256}
 
 
 def bool_filter_to_int(value: Optional[bool]):
@@ -299,6 +321,13 @@ def on_startup():
 def inicio():
     return {"mensaje": "Backend Farmacia funcionando correctamente"}
 
+@app.get("/health")
+def health_check():
+    return {
+        "status": "ok",
+        "service": "farmacia-api"
+    }
+
 
 # =========================
 # LOGIN
@@ -315,6 +344,11 @@ def login(data: schemas.LoginRequest, db: Session = Depends(get_db)):
 
     if not usuario or usuario.estatus != 1 or not verify_password(data.password, usuario.password):
         raise HTTPException(status_code=401, detail="Usuario o contraseña incorrectos")
+
+        # Si el usuario tenía contraseña antigua, la migramos automáticamente a bcrypt
+    if not usuario.password.startswith(("$2a$", "$2b$", "$2y$")):
+        usuario.password = hash_password(data.password)
+        db.commit()
 
     return usuario_to_dict(usuario)
 
