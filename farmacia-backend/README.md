@@ -1,105 +1,225 @@
-# Backend Farmacia - FastAPI + MySQL
+# Farmacia Backend
 
-Este backend fue armado para coincidir con los nombres de campos que usa el frontend de Expo/React Native.
+Backend para una aplicación de farmacia desarrollado con **FastAPI**, **SQLAlchemy** y **MySQL**.
+El proyecto está preparado para ejecutarse localmente usando **Docker Compose**, incluyendo el backend y la base de datos MySQL en contenedores.
 
-## 1. Crear base de datos
+## Tecnologías utilizadas
 
-En MySQL Workbench ejecuta:
+* Python
+* FastAPI
+* Uvicorn
+* SQLAlchemy
+* PyMySQL
+* MySQL 8.0
+* Docker
+* Docker Compose
 
-```sql
-CREATE DATABASE farmacia_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+## Estructura principal del proyecto
+
+```text
+farmacia-backend/
+├── Dockerfile
+├── docker-compose.yml
+├── .dockerignore
+├── .env.docker
+├── main.py
+├── database.py
+├── models.py
+├── schemas.py
+├── requirements.txt
+└── README.md
 ```
 
-## 2. Crear entorno virtual
+## Requisitos previos
 
-En la carpeta del backend:
+Antes de ejecutar el proyecto, asegúrate de tener instalado:
 
-```powershell
-python -m venv .venv
+* Docker Desktop
+* Docker Compose
+
+Puedes verificarlo con:
+
+```bash
+docker --version
+docker compose version
 ```
 
-Si PowerShell bloquea la activación, usa CMD:
+## Variables de entorno
 
-```cmd
-.venv\Scripts\activate.bat
-```
+El proyecto usa un archivo llamado `.env.docker` para configurar la conexión entre el backend y MySQL.
 
-O en PowerShell sin activar:
-
-```powershell
-.venv\Scripts\python.exe -m pip install -r requirements.txt
-```
-
-## 3. Instalar dependencias
-
-```powershell
-pip install -r requirements.txt
-```
-
-## 4. Configurar `.env`
-
-Copia `.env.example` como `.env` y cambia la contraseña de MySQL:
+Ejemplo de `.env.docker`:
 
 ```env
 DB_USER=root
-DB_PASSWORD=TU_CONTRASENA_MYSQL
-DB_HOST=127.0.0.1
+DB_PASSWORD=rootpass
+DB_HOST=db
 DB_PORT=3306
 DB_NAME=farmacia_db
-```
 
-## 5. Ejecutar backend
+MYSQL_ROOT_PASSWORD=rootpass
+MYSQL_DATABASE=farmacia_db
 
-Para probar en la misma PC:
-
-```powershell
-uvicorn main:app --reload
-```
-
-Para que Expo en el celular pueda conectarse:
-
-```powershell
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-## 6. Abrir documentación
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-## 7. Usuario inicial
-
-Al iniciar por primera vez, se crea automáticamente:
-
-```text
-Usuario: admin
-Contraseña: admin123
-```
-
-Puedes cambiarlo en `.env` antes de iniciar:
-
-```env
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=admin123
+
+ENVIRONMENT=development
+CORS_ORIGINS=*
+SECRET_KEY=dev_secret_farmacia_123456789
 ```
 
-## 8. Endpoints principales
+Importante:
 
-- `POST /login/`
-- `GET/POST/PUT/DELETE /usuarios/`
-- `GET/POST/PUT/DELETE /roles/`
-- `GET/POST/PUT/DELETE /productos/`
-- `POST /productos/{idProducto}/ajustar-stock`
-- `GET /productos/{idProducto}/historial`
-- `GET /productos/{idProducto}/estadisticas`
-- `GET/POST/PUT/DELETE /categorias/`
-- `GET/POST/PUT/DELETE /proveedores/`
-- `GET/POST/PUT /ventas/`
-- `GET/POST/PUT /compras/`
-- `GET/POST/PUT/DELETE /clientes/`
-- `GET /formasPago/`
-- `GET /exportar/{tipo}`
-- `POST /backup/crear`
-- `GET/PUT /configuracion/impresion`
-- `GET/PUT /seguridad/configuracion`
+* `DB_HOST=db` se usa porque el backend se conecta al servicio MySQL dentro de Docker Compose.
+* `DB_PORT=3306` es el puerto interno de MySQL dentro de Docker.
+* Desde la computadora, MySQL está disponible en el puerto `3307`.
+
+## Ejecutar el proyecto con Docker Compose
+
+Desde la carpeta raíz del backend, ejecuta:
+
+```bash
+docker compose up --build
+```
+
+Esto levantará dos contenedores:
+
+```text
+farmacia_backend
+farmacia_mysql
+```
+
+El backend quedará disponible en:
+
+```text
+http://127.0.0.1:8001
+```
+
+## Verificar que el backend funciona
+
+Abre en el navegador:
+
+```text
+http://127.0.0.1:8001/health
+```
+
+Respuesta esperada:
+
+```json
+{
+  "status": "ok",
+  "service": "farmacia-api"
+}
+```
+
+También puedes abrir la documentación automática de FastAPI:
+
+```text
+http://127.0.0.1:8001/docs
+```
+
+## Conexión a MySQL desde la computadora
+
+Si quieres conectarte a la base de datos usando MySQL Workbench, DBeaver, TablePlus o alguna herramienta similar, usa estos datos:
+
+```text
+Host: 127.0.0.1
+Puerto: 3307
+Usuario: root
+Contraseña: rootpass
+Base de datos: farmacia_db
+```
+
+## Comandos útiles
+
+Levantar el proyecto:
+
+```bash
+docker compose up
+```
+
+Levantar y reconstruir la imagen:
+
+```bash
+docker compose up --build
+```
+
+Detener los contenedores:
+
+```bash
+docker compose down
+```
+
+Ver contenedores activos:
+
+```bash
+docker ps
+```
+
+Ver logs del backend:
+
+```bash
+docker compose logs -f backend
+```
+
+Ver logs de MySQL:
+
+```bash
+docker compose logs -f db
+```
+
+Entrar al contenedor de MySQL:
+
+```bash
+docker exec -it farmacia_mysql mysql -uroot -prootpass
+```
+
+Dentro de MySQL:
+
+```sql
+SHOW DATABASES;
+USE farmacia_db;
+SHOW TABLES;
+```
+
+## Reiniciar la base de datos desde cero
+
+Si necesitas borrar todos los datos del MySQL de Docker y empezar desde cero, ejecuta:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+Advertencia: el comando `docker compose down -v` elimina el volumen de MySQL y borra los datos guardados en la base del contenedor.
+
+Para detener el proyecto sin borrar datos, usa solamente:
+
+```bash
+docker compose down
+```
+
+## Notas importantes
+
+* El archivo `.env.docker` no debe subirse a repositorios públicos si contiene contraseñas reales.
+* Para desarrollo local, se puede usar `rootpass` como contraseña.
+* Para producción, se deben cambiar las contraseñas y usar variables de entorno seguras.
+* En producción, no se recomienda usar MySQL dentro del mismo Docker Compose. Lo ideal es usar una base de datos administrada como Cloud SQL, Railway, Render, PlanetScale u otro servicio similar.
+
+## Estado actual
+
+El proyecto ya puede ejecutarse de forma portable con Docker Compose:
+
+```text
+Backend FastAPI en Docker
+MySQL 8.0 en Docker
+Conexión entre backend y base de datos mediante red interna de Docker
+```
+
+URLs principales:
+
+```text
+Backend: http://127.0.0.1:8001
+Health check: http://127.0.0.1:8001/health
+Documentación API: http://127.0.0.1:8001/docs
+```
