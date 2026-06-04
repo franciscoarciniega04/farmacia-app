@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://192.168.1.24:8000';
+export const API_BASE_URL = 'https://farmacia-backend-367281626434.us-central1.run.app';
 
 // Endpoints principales
 export const API_ENDPOINTS = {
