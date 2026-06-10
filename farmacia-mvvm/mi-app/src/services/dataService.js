@@ -156,9 +156,78 @@ class DatabaseService {
     }
   }
 
-  async cacheProductos(productos) {
-    await saveProductosLocal(productos);
-    await this.setCached(CACHE_KEYS.productos, productos, true);
+  async cacheProductos(productos = []) {
+    try {
+      const productosArray = Array.isArray(productos)
+        ? productos
+        : productos?.data || [];
+
+      await saveProductosLocal(productosArray);
+
+      // Respaldo temporal mientras migramos todo a SQLite
+      await this.setCached(CACHE_KEYS.productos, productosArray, true);
+    } catch (error) {
+      console.error('Error guardando productos localmente:', error);
+    }
+  }
+
+  async getCachedProductos(filtros = {}) {
+    try {
+      const soloActivos = filtros?.soloActivos === true;
+
+      const productosSQLite = await getProductosLocal({ soloActivos });
+
+      if (productosSQLite.length > 0) {
+        return productosSQLite;
+      }
+
+      const productosAsync = await this.getCached(CACHE_KEYS.productos);
+
+      return Array.isArray(productosAsync)
+        ? productosAsync
+        : productosAsync?.data || [];
+    } catch (error) {
+      console.error('Error leyendo productos locales:', error);
+      return [];
+    }
+  }
+
+  async fetchProductos(filtros = {}) {
+    const online = await this.checkConnection();
+
+    if (!online) {
+      const cached = await this.getCachedProductos(filtros);
+
+      return {
+        data: cached,
+        source: 'sqlite',
+      };
+    }
+
+    try {
+      const data = await productoRepository.list(filtros);
+
+      const productosArray = Array.isArray(data)
+        ? data
+        : data?.data || [];
+
+      await this.cacheProductos(productosArray);
+
+      return {
+        data: productosArray,
+        source: 'server',
+      };
+    } catch (error) {
+      console.error('Error cargando productos desde servidor:', error);
+
+      const cached = await this.getCachedProductos(filtros);
+
+      return {
+        data: cached,
+        source: 'sqlite',
+        error,
+      };
+    }
   }
 
   async getCachedProductos() {
