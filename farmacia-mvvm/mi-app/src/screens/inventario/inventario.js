@@ -43,8 +43,13 @@ export default function InventarioScreen({ route, navigation }) {
     >
       <View style={styles.productoHeader}>
         <View style={styles.productoInfo}>
-          <Text style={styles.productoNombre}>{item.nombre}</Text>
-          <Text style={styles.productoCodigo}>Código: {item.codigo}</Text>
+          <Text style={styles.productoNombre}>
+            {item.nombre || item.nombreProducto || 'Producto sin nombre'}
+          </Text>
+
+          <Text style={styles.productoCodigo}>
+            Código: {item.codigo || item.codigoProducto || 'Sin código'}
+          </Text>
         </View>
         {esStockBajo(item) && (
           <View style={styles.alertaBadge}>
@@ -64,12 +69,12 @@ export default function InventarioScreen({ route, navigation }) {
                 esStockBajo(item) && styles.stockBajo,
               ]}
             >
-              {item.stockActual}
+              {Number(item.stockActual ?? item.stock ?? 0)}
             </Text>
           </View>
           <View style={styles.stockItem}>
             <Text style={styles.stockLabel}>Stock Mínimo:</Text>
-            <Text style={styles.stockValue}>{item.stockMinimo}</Text>
+            <Text style={styles.stockValue}>{Number(item.stockMinimo ?? 0)}</Text>
           </View>
         </View>
 
@@ -173,7 +178,7 @@ export default function InventarioScreen({ route, navigation }) {
           <FlatList
             data={productosFiltrados}
             renderItem={renderProductoItem}
-            keyExtractor={(item) => item.idProducto.toString()}
+            keyExtractor={(item) => String(item.idProducto || item.localId || item.codigo)}
             contentContainerStyle={styles.listContent}
             refreshControl={
               <RefreshControl

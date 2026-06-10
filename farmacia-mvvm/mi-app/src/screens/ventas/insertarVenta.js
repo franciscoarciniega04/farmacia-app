@@ -283,16 +283,28 @@ export default function InsertarVentaScreen({ route, navigation }) {
         );
       } else {
         // Agregar a cola de sincronización
-        await DatabaseService.addToSyncQueue({
-          type: 'venta',
-          endpoint: esEdicion ? `/ventas/${venta.idVenta}` : '/ventas/',
-          method: esEdicion ? 'PUT' : 'POST',
-          data: ventaData,
+        if (esEdicion) {
+          Alert.alert(
+            'Sin conexión',
+            'Por seguridad, no se pueden editar ventas sin conexión. Intenta nuevamente cuando tengas internet.'
+          );
+          return;
+        }
+
+        const formaPagoSeleccionada = formasPago.find(
+          (fp) => Number(fp.idFormaPago) === Number(idFormaPago)
+        );
+
+        await DatabaseService.createVentaOffline({
+          ventaData,
+          detallesUI: detalles,
+          usuario,
+          formaPago: formaPagoSeleccionada,
         });
 
         Alert.alert(
-          'Guardado Offline',
-          'La venta se guardó localmente y se sincronizará cuando haya conexión.',
+          'Venta guardada offline',
+          'La venta se guardó en este dispositivo, el inventario local fue actualizado y se sincronizará cuando vuelva internet.',
           [
             {
               text: 'OK',

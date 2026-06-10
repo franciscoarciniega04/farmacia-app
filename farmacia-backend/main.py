@@ -74,9 +74,10 @@ def verify_password(raw_password: str, stored_password: str) -> bool:
 
 
 def bool_filter_to_int(value: Optional[bool]):
-    if value is None:
-        return None
-    return 1 if value else 0
+    if value is True:
+        return 1
+
+    return None
 
 
 def rol_to_dict(rol: models.Rol):

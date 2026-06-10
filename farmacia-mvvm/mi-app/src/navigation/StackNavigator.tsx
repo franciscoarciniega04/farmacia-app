@@ -43,6 +43,11 @@ export type RootStackParamList = {
   Inventario: { usuario: any };
   Compras: { usuario: any };
   Proveedores: { usuario: any };
+  InsertarProveedor: {
+    usuario: any;
+    proveedor?: any;
+    onProveedorGuardado?: () => void;
+  };
   Reportes: { usuario: any };
   Ajustes: { usuario: any };
   Usuarios: { usuario: any };

@@ -63,7 +63,9 @@ export default function VentasScreen({ route, navigation }) {
       <View style={styles.ventaHeader}>
         <View style={styles.ventaFolio}>
           <Text style={styles.folioLabel}>Folio:</Text>
-          <Text style={styles.folioValue}>#{item.idVenta}</Text>
+          <Text style={styles.folioValue}>
+            {item.pendienteSync ? '#Pendiente' : `#${item.idVenta}`}
+          </Text>
         </View>
         <Text style={styles.ventaTotal}>${(item.subtotal * 1.16).toFixed(2)}</Text>
       </View>
@@ -72,6 +74,17 @@ export default function VentasScreen({ route, navigation }) {
         <View style={styles.ventaInfoRow}>
           <Ionicons name="person-outline" size={16} color="#666" />
           <Text style={styles.ventaInfoText}>{item.nombreUsuario}</Text>
+          {item.estadoSync === 'conflicto' ? (
+            <View style={styles.conflictBadge}>
+              <Ionicons name="warning-outline" size={14} color="#991B1B" />
+              <Text style={styles.conflictBadgeText}>Conflicto de inventario</Text>
+            </View>
+          ) : item.pendienteSync ? (
+            <View style={styles.pendingBadge}>
+              <Ionicons name="cloud-upload-outline" size={14} color="#92400E" />
+              <Text style={styles.pendingBadgeText}>Pendiente de sincronizar</Text>
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.ventaInfoRow}>
@@ -649,4 +662,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
+  pendingBadge: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    gap: 6,
+  },
+  pendingBadgeText: {
+    color: '#92400E',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  conflictBadge: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    gap: 6,
+  },
+  conflictBadgeText: {
+    color: '#991B1B',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
 });

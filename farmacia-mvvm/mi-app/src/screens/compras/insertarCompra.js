@@ -267,23 +267,34 @@ export default function InsertarCompraScreen({ route, navigation }) {
         );
       } else {
         // Agregar a cola de sincronización
-        await DatabaseService.addToSyncQueue({
-          type: 'compra',
-          endpoint: esEdicion ? `/compras/${compra.idCompra}` : '/compras/',
-          method: esEdicion ? 'PUT' : 'POST',
-          data: compraData,
+        if (esEdicion) {
+          Alert.alert(
+            'Sin conexión',
+            'Por seguridad, no se pueden editar compras sin conexión. Intenta nuevamente cuando tengas internet.'
+          );
+          return;
+        }
+
+        const proveedorSeleccionado = proveedores.find(
+          (prov) => Number(prov.idProveedor) === Number(idProveedor)
+        );
+
+        await DatabaseService.createCompraOffline({
+          compraData,
+          detallesUI: detalles,
+          proveedor: proveedorSeleccionado,
         });
 
         Alert.alert(
-          'Guardado Offline',
-          'La compra se guardó localmente y se sincronizará cuando haya conexión.',
+          'Compra guardada offline',
+          'La compra se guardó en este dispositivo, el inventario local fue actualizado y se sincronizará cuando vuelva internet.',
           [
             {
               text: 'OK',
               onPress: () => navigation.goBack(),
             },
           ]
-        );
+        );;
       }
     } catch (err) {
       Alert.alert('Error', err.message || 'No se pudo guardar la compra');

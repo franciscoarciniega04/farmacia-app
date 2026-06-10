@@ -162,10 +162,13 @@ export default function InsertarProductoScreen({ route, navigation }) {
       } else {
         // Agregar a cola de sincronización
         await DatabaseService.addToSyncQueue({
-          type: 'producto',
+          type: esEdicion ? 'producto:update' : 'producto:create',
           endpoint: esEdicion ? `/productos/${productoInicial.idProducto}` : '/productos/',
           method: esEdicion ? 'PUT' : 'POST',
           data: body,
+          localId: esEdicion
+            ? `producto_${productoInicial.idProducto}`
+            : `producto_local_${Date.now()}`,
         });
 
         Alert.alert(
@@ -222,10 +225,11 @@ export default function InsertarProductoScreen({ route, navigation }) {
               ]);
             } else {
               await DatabaseService.addToSyncQueue({
-                type: 'producto_delete',
+                type: 'producto:update',
                 endpoint: `/productos/${productoInicial.idProducto}`,
                 method: 'DELETE',
                 data: {},
+                localId: `producto_${productoInicial.idProducto}`,
               });
 
               Alert.alert(

@@ -15,6 +15,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import SyncStatusBar from '../../components/SyncStatusBar';
 
 const { width, height } = Dimensions.get('window');
 
@@ -112,6 +113,7 @@ export default function MenuPrincipalScreen({ route, navigation }) {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <View style={styles.container}>
+      <SyncStatusBar />
         {/* Header*/}
         <View style={styles.header}>
           <View style={styles.headerContent}>

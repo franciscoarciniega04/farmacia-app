@@ -64,7 +64,9 @@ export default function ComprasScreen({ route, navigation }) {
       <View style={styles.compraHeader}>
         <View style={styles.compraFolio}>
           <Text style={styles.folioLabel}>Folio:</Text>
-          <Text style={styles.folioValue}>#{item.idCompra}</Text>
+         <Text style={styles.folioValue}>
+          {item.pendienteSync ? '#Pendiente' : `#${item.idCompra}`}
+        </Text>
         </View>
         <Text style={styles.compraTotal}>${(item.subtotal * 1.16).toFixed(2)}</Text>
       </View>
@@ -79,6 +81,13 @@ export default function ComprasScreen({ route, navigation }) {
           <Ionicons name="calendar-outline" size={16} color="#666" />
           <Text style={styles.compraInfoText}>{item.fechaCompra}</Text>
         </View>
+
+        {item.pendienteSync && (
+          <View style={styles.pendingBadge}>
+            <Ionicons name="cloud-upload-outline" size={14} color="#92400E" />
+            <Text style={styles.pendingBadgeText}>Pendiente de sincronizar</Text>
+          </View>
+        )}
 
         <View style={styles.compraInfoRow}>
           <View
@@ -237,7 +246,7 @@ export default function ComprasScreen({ route, navigation }) {
           <FlatList
             data={compras}
             renderItem={renderCompraItem}
-            keyExtractor={(item) => item.idCompra.toString()}
+            keyExtractor={(item) => String(item.localId || item.idCompra)}
             contentContainerStyle={styles.listContent}
             refreshControl={
               <RefreshControl
@@ -644,4 +653,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
+  pendingBadge: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    gap: 6,
+  },
+  pendingBadgeText: {
+    color: '#92400E',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
 });
